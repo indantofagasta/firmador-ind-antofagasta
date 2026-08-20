@@ -187,6 +187,13 @@
   .signature-group.confirmed .confirmation-hint { background: var(--ok); }
   .signature-group.confirmed .chief-placeholder { border-color: transparent; background: transparent; }
   .signature-group.confirmed .chief-label { border-top-color: transparent; color: var(--ink); }
+  .existing-signature-row { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 14px 15px; border: 1px solid #d5e0ea; border-radius: 13px; background: #f4f8fb; cursor: pointer; }
+  .existing-signature-row > span:first-child { flex: 1; }
+  .existing-signature-row strong, .existing-signature-row small { display: block; }
+  .existing-signature-row small { margin-top: 4px; color: var(--muted); line-height: 1.35; }
+  #professor-signature-upload > label { display: block; margin-top: 18px; }
+  .signature-group.chief-only { gap: 0; }
+  .signature-group.chief-only .professor-signature-box { display: none; }
 
   .placement-message { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); max-width: min(560px, calc(100% - 32px)); padding: 12px 17px; border-radius: 12px; background: #28374a; color: white; box-shadow: 0 10px 28px rgba(0,0,0,.2); text-align: center; font-size: .92rem; font-weight: 600; z-index: 12; }
   .viewer-panel { position: relative; }

@@ -23,6 +23,7 @@
     displayScale: 1,
     zoom: 1,
     signatureFile: null,
+    alreadySigned: false,
     signatureOriginalDataUrl: '',
     professorSignatureDataUrl: '',
     signatureAspect: 2,
@@ -43,6 +44,9 @@
     areaTitle: el('area-title'), backArea: el('back-area'), name: el('professor-name'),
     pdfInput: el('pdf-input'), pdfPicker: el('pdf-picker'), pdfFilename: el('pdf-filename'),
     signatureInput: el('signature-input'), signaturePicker: el('signature-picker'),
+    alreadySigned: el('already-signed'), signatureUpload: el('professor-signature-upload'),
+    imageAdjustment: el('image-adjustment-section'), resizeGuide: el('resize-guide'),
+    confirmGuideNumber: el('confirm-guide-number'),
     signatureFilename: el('signature-filename'), removeBackground: el('remove-background'),
     backgroundLevel: el('background-level'), previewCard: el('signature-preview-card'),
     miniPreview: el('signature-mini-preview'), emptyViewer: el('empty-viewer'),
@@ -76,6 +80,7 @@
     dom.signaturePicker.addEventListener('click', () => dom.signatureInput.click());
     dom.pdfInput.addEventListener('change', onPdfSelected);
     dom.signatureInput.addEventListener('change', onSignatureSelected);
+    dom.alreadySigned.addEventListener('change', onAlreadySignedChanged);
     dom.removeBackground.addEventListener('change', () => {
       dom.backgroundLevel.disabled = !dom.removeBackground.checked;
       if (state.signatureOriginalDataUrl) processSignature();
@@ -343,6 +348,27 @@
     }
   }
 
+  function onAlreadySignedChanged() {
+    state.alreadySigned = dom.alreadySigned.checked;
+    dom.signatureUpload.classList.toggle('hidden', state.alreadySigned);
+    dom.imageAdjustment.classList.toggle('hidden', state.alreadySigned);
+    dom.resizeGuide.classList.toggle('hidden', state.alreadySigned);
+    dom.confirmGuideNumber.textContent = state.alreadySigned ? '3' : '4';
+    dom.group.classList.toggle('chief-only', state.alreadySigned);
+    state.placementConfirmed = false;
+    dom.group.classList.remove('confirmed');
+    dom.confirmationHint.textContent = 'Doble clic para confirmar';
+    if (state.pdfJsDoc && (state.alreadySigned || state.professorSignatureDataUrl)) {
+      initializeSignatureSizes();
+      showSignatureGroup();
+    } else {
+      dom.group.classList.add('hidden');
+      state.placementValid = false;
+    }
+    updateSteps();
+    updateActionAvailability();
+  }
+
   async function findLastContentPage(pdfDoc) {
     for (let number = pdfDoc.numPages; number >= 1; number -= 1) {
       const page = await pdfDoc.getPage(number);
@@ -410,7 +436,7 @@
     setViewerStatus('Revisa la ubicacion de las firmas', 'Ultima pagina con contenido');
     dom.pageInfo.textContent = `Pagina ${state.pageNumber} de ${state.pdfJsDoc.numPages}`;
 
-    if (state.professorSignatureDataUrl) {
+    if (state.alreadySigned || state.professorSignatureDataUrl) {
       if (dom.group.classList.contains('hidden')) {
         initializeSignatureSizes();
       }
@@ -523,7 +549,7 @@
   }
 
   function maybeShowSignatureGroup(previous) {
-    if (state.pdfJsDoc && state.professorSignatureDataUrl) showSignatureGroup(previous);
+    if (state.pdfJsDoc && (state.alreadySigned || state.professorSignatureDataUrl)) showSignatureGroup(previous);
   }
 
   function showSignatureGroup(previous) {
@@ -688,7 +714,7 @@
   }
 
   function validatePlacement(showMessage) {
-    if (!state.pdfJsDoc || !state.professorSignatureDataUrl || dom.group.classList.contains('hidden')) {
+    if (!state.pdfJsDoc || (!state.alreadySigned && !state.professorSignatureDataUrl) || dom.group.classList.contains('hidden')) {
       state.placementValid = false;
       updateActionAvailability();
       return false;
@@ -788,7 +814,7 @@
     const pdfDoc = await PDFDocument.load(state.pdfBytes.slice(0));
     const pages = pdfDoc.getPages();
     const page = pages[state.pageNumber - 1];
-    const professorPng = await pdfDoc.embedPng(state.professorSignatureDataUrl);
+    const professorPng = state.alreadySigned ? null : await pdfDoc.embedPng(state.professorSignatureDataUrl);
     // La administracion ya decidio si elimina o conserva el fondo blanco.
     const normalizedChief = await normalizeSignatureImage(chiefSignatureDataUrl, false, 'normal');
     const chiefPng = await pdfDoc.embedPng(normalizedChief.dataUrl);
@@ -797,7 +823,7 @@
     const scaleY = page.getHeight() / dom.canvas.clientHeight;
     const groupLeft = dom.group.offsetLeft;
     const groupTop = dom.group.offsetTop;
-    const professorRect = {
+    const professorRect = state.alreadySigned ? null : {
       left: groupLeft + dom.professorBox.offsetLeft + dom.professorVisual.offsetLeft,
       top: groupTop + dom.professorBox.offsetTop + dom.professorVisual.offsetTop,
       width: dom.professorVisual.offsetWidth,
@@ -811,24 +837,29 @@
     };
 
     const lines = Array.isArray(chiefLabel) ? chiefLabel : state.signerLabel;
-    const professorLabelRect = {
+    const professorLabelRect = state.alreadySigned ? null : {
       left: groupLeft + dom.professorBox.offsetLeft,
       top: groupTop + dom.professorBox.offsetTop,
       width: dom.professorBox.offsetWidth,
       height: dom.professorBox.offsetHeight
     };
     const baseLabelFontSize = Math.max(8, 11 * scaleY);
-    const longestLabel = ['FIRMA INSTRUCTOR'].concat(lines).reduce((longest, line) =>
+    const comparedLabels = state.alreadySigned ? lines : ['FIRMA INSTRUCTOR'].concat(lines);
+    const longestLabel = comparedLabels.reduce((longest, line) =>
       font.widthOfTextAtSize(String(line), 1) > font.widthOfTextAtSize(String(longest), 1) ? line : longest, '');
-    const narrowestBlockWidth = Math.min(professorLabelRect.width * scaleX, chiefRect.width * scaleX);
+    const narrowestBlockWidth = state.alreadySigned
+      ? chiefRect.width * scaleX
+      : Math.min(professorLabelRect.width * scaleX, chiefRect.width * scaleX);
     const sharedLabelFontSize = Math.min(baseLabelFontSize,
       narrowestBlockWidth * .94 / Math.max(1, font.widthOfTextAtSize(String(longestLabel).toUpperCase(), 1)));
 
-    drawContainedImageFromCanvasRect(page, professorPng, professorRect, scaleX, scaleY);
-    drawCenteredLabel_(page, font, ['FIRMA INSTRUCTOR'], {
-      left: professorLabelRect.left, top: professorLabelRect.top,
-      width: professorLabelRect.width, height: professorLabelRect.height
-    }, scaleX, scaleY, sharedLabelFontSize);
+    if (!state.alreadySigned) {
+      drawContainedImageFromCanvasRect(page, professorPng, professorRect, scaleX, scaleY);
+      drawCenteredLabel_(page, font, ['FIRMA INSTRUCTOR'], {
+        left: professorLabelRect.left, top: professorLabelRect.top,
+        width: professorLabelRect.width, height: professorLabelRect.height
+      }, scaleX, scaleY, sharedLabelFontSize);
+    }
 
     const blockX = chiefRect.left * scaleX;
     const blockTop = chiefRect.top * scaleY;
@@ -883,7 +914,8 @@
   }
 
   function updateSteps() {
-    const level = state.placementConfirmed ? 3 : (state.pdfFile && state.signatureFile ? 2 : 1);
+    const hasRequiredSignature = state.alreadySigned || state.signatureFile;
+    const level = state.placementConfirmed ? 3 : (state.pdfFile && hasRequiredSignature ? 2 : 1);
     document.querySelectorAll('.step').forEach(step => {
       const number = Number(step.dataset.step);
       step.classList.toggle('active', number === level);
@@ -892,7 +924,7 @@
   }
 
   function updateActionAvailability() {
-    const ready = Boolean(state.pdfFile && state.signatureFile && state.placementValid);
+    const ready = Boolean(state.pdfFile && (state.alreadySigned || state.signatureFile) && state.placementValid);
     dom.send.disabled = !(ready && state.placementConfirmed && dom.name.value.trim());
   }
 
@@ -1040,12 +1072,16 @@
     dom.areaScreen.classList.add('hidden');
     dom.loading.classList.remove('hidden');
     state.area = ''; state.token = ''; state.pdfFile = null; state.pdfBytes = null;
-    state.pdfJsDoc = null; state.pageNumber = 0; state.signatureFile = null;
+    state.pdfJsDoc = null; state.pageNumber = 0; state.signatureFile = null; state.alreadySigned = false;
     state.signatureOriginalDataUrl = ''; state.professorSignatureDataUrl = '';
     state.placementConfirmed = false; state.placementValid = false;
     dom.name.value = ''; dom.pdfInput.value = ''; dom.signatureInput.value = '';
     dom.pdfFilename.textContent = 'Archivo PDF';
     dom.signatureFilename.textContent = 'PNG, JPG, WEBP o BMP';
+    dom.alreadySigned.checked = false;
+    dom.signatureUpload.classList.remove('hidden'); dom.imageAdjustment.classList.remove('hidden');
+    dom.resizeGuide.classList.remove('hidden'); dom.confirmGuideNumber.textContent = '4';
+    dom.group.classList.remove('chief-only');
     dom.removeBackground.checked = false; dom.backgroundLevel.disabled = true;
     dom.previewCard.classList.add('hidden'); dom.group.classList.add('hidden');
     dom.canvasContainer.classList.add('hidden'); dom.emptyViewer.classList.remove('hidden');

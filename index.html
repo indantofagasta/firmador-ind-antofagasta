@@ -145,15 +145,23 @@
             <span><strong>Seleccionar informe</strong><small id="pdf-filename">Archivo PDF</small></span>
           </button>
 
-          <label>Firma del profesor o profesora</label>
-          <input id="signature-input" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp" hidden>
-          <button id="signature-picker" class="file-picker" type="button">
-            <span class="file-picker-icon signature-icon">✍</span>
-            <span><strong>Seleccionar firma</strong><small id="signature-filename">PNG, JPG, WEBP o BMP</small></span>
-          </button>
+          <label class="existing-signature-row" for="already-signed">
+            <span><strong>El informe ya incluye mi firma</strong><small>Actívalo si tu firma ya está incorporada en el PDF.</small></span>
+            <input id="already-signed" type="checkbox">
+            <span class="switch"></span>
+          </label>
+
+          <div id="professor-signature-upload">
+            <label>Firma del profesor o profesora</label>
+            <input id="signature-input" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp" hidden>
+            <button id="signature-picker" class="file-picker" type="button">
+              <span class="file-picker-icon signature-icon">✍</span>
+              <span><strong>Seleccionar firma</strong><small id="signature-filename">PNG, JPG, WEBP o BMP</small></span>
+            </button>
+          </div>
         </section>
 
-        <section class="form-section optional-section">
+        <section id="image-adjustment-section" class="form-section optional-section">
           <div class="section-title"><span>3</span><div><strong>Ajustar imagen</strong><small>Opcional</small></div></div>
           <div class="background-tool">
             <label class="switch-row" for="remove-background">
@@ -177,9 +185,9 @@
         <div class="quick-guide">
           <strong>Cómo firmar</strong>
           <p><span>1</span>Revisa la ultima pagina del informe.</p>
-          <p><span>2</span>Mueve con el dedo o mouse el bloque horizontal.</p>
-          <p><span>3</span>Usa el punto azul para ajustar el tamaño de tu firma.</p>
-          <p><span>4</span>Haz doble clic o doble toque sobre las firmas para confirmar.</p>
+          <p><span>2</span>Mueve con el dedo o mouse el bloque de firmas.</p>
+          <p id="resize-guide"><span>3</span>Usa el punto azul para ajustar el tamaño de tu firma.</p>
+          <p><span id="confirm-guide-number">4</span>Haz doble clic o doble toque para confirmar.</p>
         </div>
       </div>
 

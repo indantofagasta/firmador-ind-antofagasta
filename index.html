@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; worker-src blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; form-action https://script.google.com; frame-src https://script.google.com https://*.googleusercontent.com; base-uri 'none'; object-src 'none'">
+  <meta charset="UTF-8">
+  <title>Plataforma Firmas IND Antofagasta</title>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="success-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="success-title">
+    <div class="success-modal">
+      <div class="success-check">✓</div>
+      <h2 id="success-title">Informe enviado correctamente</h2>
+      <p id="success-copy">El archivo fue guardado en Drive.</p>
+      <button id="success-continue" class="button primary">Volver al inicio</button>
+    </div>
+  </div>
+
+  <section id="loading-screen" class="screen centered-screen">
+    <div class="loader"></div>
+    <p>Preparando el firmador...</p>
+  </section>
+
+  <section id="area-screen" class="screen centered-screen hidden">
+    <div class="intro-card">
+      <div class="brand-logo"><img class="ind-logo" src="logo-ind.webp" alt="Instituto Nacional de Deportes"></div>
+      <p class="eyebrow">Instituto Nacional de Deportes</p>
+      <h1>Plataforma Firmas<br>IND Antofagasta</h1>
+      <p class="intro-copy">Selecciona el programa al que corresponde tu informe.</p>
+      <div class="area-grid">
+        <button class="area-card cem" data-area="CEM">
+          <span class="area-icon">C</span>
+          <span><strong>CEM</strong><small>Crecer en Movimiento</small></span>
+        </button>
+        <button class="area-card dps" data-area="DPS">
+          <span class="area-icon">D</span>
+          <span><strong>DPS</strong><small>Deporte y Participacion Social</small></span>
+        </button>
+      </div>
+      <section id="session-history" class="session-history hidden">
+        <div class="history-head"><strong>Informes enviados desde este dispositivo</strong><small>Historial de esta sesión</small></div>
+        <div id="session-history-list" class="history-list"></div>
+      </section>
+      <a class="admin-entry" href="#admin">Administración</a>
+    </div>
+  </section>
+
+  <section id="admin-screen" class="admin-screen hidden" aria-labelledby="admin-title">
+    <div id="admin-login" class="admin-login-card">
+      <a class="admin-back" href="#">← Volver al firmador</a>
+      <p class="eyebrow">Acceso restringido</p>
+      <h1 id="admin-title">Administración</h1>
+      <p class="admin-muted">Configura las carpetas anuales y las firmas de jefatura.</p>
+      <label for="admin-password">Contraseña</label>
+      <input id="admin-password" type="password" autocomplete="current-password">
+      <button id="admin-login-button" class="button primary" type="button">Ingresar</button>
+      <div id="admin-login-status" class="admin-status hidden" role="status"></div>
+    </div>
+
+    <main id="admin-panel" class="admin-shell hidden">
+      <header class="admin-head">
+        <div><p class="eyebrow">Plataforma Firmas IND Antofagasta</p><h1>Configuración</h1></div>
+        <a href="#">Ir al firmador público</a>
+      </header>
+      <div class="admin-grid">
+        <section class="admin-card">
+          <h2>Firmante activo</h2>
+          <label for="admin-active-signer">Jefatura que firmará</label>
+          <select id="admin-active-signer"><option value="TITULAR">Titular</option><option value="SUBROGANTE">Subrogante</option></select>
+          <label for="admin-grace-days">Días de gracia del mes</label>
+          <input id="admin-grace-days" type="number" min="0" max="15">
+          <button id="admin-save-general" class="button primary" type="button">Guardar configuración</button>
+          <div id="admin-general-status" class="admin-status hidden" role="status"></div>
+        </section>
+
+        <section class="admin-card">
+          <h2>Carpetas anuales</h2>
+          <label for="admin-year">Año</label><select id="admin-year"></select>
+          <label for="admin-cem">Carpeta madre CEM</label><input id="admin-cem" placeholder="Enlace o ID de Drive">
+          <label for="admin-dps">Carpeta madre DPS</label><input id="admin-dps" placeholder="Enlace o ID de Drive">
+          <button id="admin-test-folders" class="button secondary" type="button">Probar acceso</button>
+          <button id="admin-save-folders" class="button primary" type="button">Guardar carpetas</button>
+          <div id="admin-folder-status" class="admin-status">CEM y DPS se configuran por separado.</div>
+        </section>
+
+        <section class="admin-card">
+          <h2>Firmas de jefatura</h2>
+          <div class="admin-states"><div id="admin-titular-state">Titular</div><div id="admin-subrogante-state">Subrogante</div></div>
+          <label for="admin-signature-type">Firma a cargar</label>
+          <select id="admin-signature-type"><option value="TITULAR">Titular</option><option value="SUBROGANTE">Subrogante</option></select>
+          <label for="admin-signature-file">Imagen</label><input id="admin-signature-file" type="file" accept="image/png,image/jpeg,image/webp">
+          <label for="admin-background-mode">Fondo blanco</label>
+          <select id="admin-background-mode"><option value="none">Conservar</option><option value="soft">Eliminar suave</option><option value="normal" selected>Eliminar normal</option><option value="strong">Eliminar intenso</option></select>
+          <div id="admin-signature-preview" class="admin-preview"><span class="admin-muted">Vista previa</span></div>
+          <button id="admin-upload-signature" class="button primary" type="button" disabled>Guardar firma</button>
+          <div id="admin-signature-status" class="admin-status hidden" role="status"></div>
+        </section>
+
+        <section class="admin-card">
+          <h2>Cambiar contraseña</h2>
+          <label for="admin-current-password">Contraseña actual</label><input id="admin-current-password" type="password" autocomplete="current-password">
+          <label for="admin-new-password">Nueva contraseña</label><input id="admin-new-password" type="password" minlength="10" autocomplete="new-password">
+          <button id="admin-change-password" class="button primary" type="button">Actualizar contraseña</button>
+          <div id="admin-password-status" class="admin-status hidden" role="status"></div>
+        </section>
+
+        <section class="admin-card admin-wide"><h2>Últimos informes recibidos</h2><div id="admin-recent" class="admin-recent admin-muted">Todavía no hay envíos.</div></section>
+      </div>
+    </main>
+  </section>
+
+  <main id="app" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <button id="back-area" class="icon-button" aria-label="Cambiar programa">&larr;</button>
+        <div>
+          <span class="eyebrow">Informe SIGI</span>
+          <h2 id="area-title">CEM</h2>
+        </div>
+      </div>
+
+      <div class="steps" aria-label="Progreso">
+        <span class="step active" data-step="1">1</span><i></i>
+        <span class="step" data-step="2">2</span><i></i>
+        <span class="step" data-step="3">3</span>
+      </div>
+
+      <div class="sidebar-scroll">
+        <section class="form-section">
+          <div class="section-title"><span>1</span><div><strong>Identificación</strong><small>Escribe quién envía el informe</small></div></div>
+          <label for="professor-name">Nombre y apellido</label>
+          <input id="professor-name" type="text" maxlength="120" autocomplete="name" placeholder="Ej. Marcela Paz">
+        </section>
+
+        <section class="form-section">
+          <div class="section-title"><span>2</span><div><strong>Archivos</strong><small>Selecciona el informe y tu firma</small></div></div>
+          <label>Informe SIGI</label>
+          <input id="pdf-input" type="file" accept="application/pdf,.pdf" hidden>
+          <button id="pdf-picker" class="file-picker" type="button">
+            <span class="file-picker-icon">PDF</span>
+            <span><strong>Seleccionar informe</strong><small id="pdf-filename">Archivo PDF</small></span>
+          </button>
+
+          <label>Firma del profesor o profesora</label>
+          <input id="signature-input" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp" hidden>
+          <button id="signature-picker" class="file-picker" type="button">
+            <span class="file-picker-icon signature-icon">✍</span>
+            <span><strong>Seleccionar firma</strong><small id="signature-filename">PNG, JPG, WEBP o BMP</small></span>
+          </button>
+        </section>
+
+        <section class="form-section optional-section">
+          <div class="section-title"><span>3</span><div><strong>Ajustar imagen</strong><small>Opcional</small></div></div>
+          <div class="background-tool">
+            <label class="switch-row" for="remove-background">
+              <span><strong>Eliminar fondo blanco</strong><small>Podrás revisar el resultado antes de enviar.</small></span>
+              <input id="remove-background" type="checkbox">
+              <span class="switch"></span>
+            </label>
+            <select id="background-level" class="compact-select" disabled aria-label="Intensidad para eliminar fondo">
+              <option value="soft">Suave</option>
+              <option value="normal" selected>Normal</option>
+              <option value="strong">Intenso</option>
+            </select>
+          </div>
+
+          <div id="signature-preview-card" class="signature-preview-card hidden">
+            <span>Vista previa procesada</span>
+            <div class="checkerboard"><img id="signature-mini-preview" alt="Vista previa de firma"></div>
+          </div>
+        </section>
+
+        <div class="quick-guide">
+          <strong>Cómo firmar</strong>
+          <p><span>1</span>Revisa la ultima pagina del informe.</p>
+          <p><span>2</span>Mueve con el dedo o mouse el bloque horizontal.</p>
+          <p><span>3</span>Usa el punto azul para ajustar el tamaño de tu firma.</p>
+          <p><span>4</span>Haz doble clic o doble toque sobre las firmas para confirmar.</p>
+        </div>
+      </div>
+
+      <div class="sidebar-actions">
+        <button id="send-report" class="button primary" disabled>Enviar informe firmado</button>
+      </div>
+    </aside>
+
+    <section class="viewer-panel">
+      <header class="viewer-toolbar">
+        <div>
+          <strong id="viewer-status">Carga tu informe y firma</strong>
+          <small id="page-info">Se abrira la ultima pagina con contenido</small>
+        </div>
+        <div class="zoom-controls">
+          <button id="zoom-out" class="icon-button" aria-label="Alejar">−</button>
+          <span id="zoom-value">100%</span>
+          <button id="zoom-in" class="icon-button" aria-label="Acercar">+</button>
+        </div>
+      </header>
+
+      <div id="viewer-scroll" class="viewer-scroll">
+        <div id="empty-viewer" class="empty-viewer">
+          <div class="empty-icon">PDF</div>
+          <h3>Aqui revisaras las dos firmas</h3>
+          <p>La firma de jefatura se mostrara como un espacio reservado y quedara siempre a la derecha.</p>
+        </div>
+
+        <div id="canvas-container" class="canvas-container hidden">
+          <canvas id="pdf-canvas"></canvas>
+          <div id="signature-group" class="signature-group hidden" aria-label="Bloque de firmas">
+            <div id="professor-signature-box" class="professor-signature-box">
+              <div id="professor-signature-visual" class="professor-signature-visual">
+                <img id="professor-signature-image" draggable="false" alt="Firma del profesor o profesora">
+                <button id="resize-handle" class="resize-handle" aria-label="Cambiar tamaño de la firma del profesor"></button>
+              </div>
+              <div class="professor-label">FIRMA INSTRUCTOR</div>
+            </div>
+            <div id="chief-placeholder" class="chief-placeholder">
+              <div class="placeholder-sign" aria-label="Aquí se incorporará la firma de jefatura">
+                <div class="stamp-inner"><span>FIRMA</span></div>
+              </div>
+              <div id="chief-label" class="chief-label"></div>
+            </div>
+            <div id="confirmation-hint" class="confirmation-hint">Doble clic para confirmar</div>
+          </div>
+        </div>
+      </div>
+      <div id="placement-message" class="placement-message hidden"></div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="app.js" defer></script>
+</body>
+</html>

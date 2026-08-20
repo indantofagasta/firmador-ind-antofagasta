@@ -183,9 +183,6 @@
       el('admin-year').innerHTML = [...years].sort((a, b) => b - a).map(year => `<option>${year}</option>`).join('');
       el('admin-year').value = String(now);
       fillAdminFolders();
-      el('admin-recent').innerHTML = data.recent.length ? data.recent.map(item =>
-        `<div class="admin-recent-row"><strong>${escapeHtml(item.area)} · ${escapeHtml(item.filename)}</strong><br>${escapeHtml(item.professorName)} · ${escapeHtml(item.month)} ${escapeHtml(item.year)} · <a href="${escapeHtml(item.fileUrl)}" target="_blank" rel="noopener noreferrer">Abrir en Drive</a></div>`
-      ).join('') : 'Todavía no hay envíos.';
     } catch (error) { handleAdminError(error); }
   }
 

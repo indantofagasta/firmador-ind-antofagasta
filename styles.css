@@ -187,10 +187,15 @@
   .signature-group.confirmed .confirmation-hint { background: var(--ok); }
   .signature-group.confirmed .chief-placeholder { border-color: transparent; background: transparent; }
   .signature-group.confirmed .chief-label { border-top-color: transparent; color: var(--ink); }
-  .existing-signature-row { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding: 14px 15px; border: 1px solid #d5e0ea; border-radius: 13px; background: #f4f8fb; cursor: pointer; }
-  .existing-signature-row > span:first-child { flex: 1; }
+  label.existing-signature-row { display: grid; grid-template-columns: minmax(0,1fr) 42px; align-items: center; gap: 16px; margin: 16px 0 0; padding: 14px 15px; border: 1px solid #d4e0eb; border-radius: 13px; background: #f7fafc; color: #36465a; cursor: pointer; }
   .existing-signature-row strong, .existing-signature-row small { display: block; }
+  .existing-signature-row strong { font-size: .94rem; line-height: 1.3; }
   .existing-signature-row small { margin-top: 4px; color: var(--muted); line-height: 1.35; }
+  .existing-signature-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .existing-signature-row .switch { justify-self: end; flex: none; }
+  .existing-signature-row input:checked + .switch { background: var(--primary); }
+  .existing-signature-row input:checked + .switch::after { transform: translateX(18px); }
+  .existing-signature-row:focus-within { border-color: #8399b5; box-shadow: 0 0 0 3px rgba(29,53,87,.08); }
   #professor-signature-upload > label { display: block; margin-top: 18px; }
   .signature-group.chief-only { gap: 0; }
   .signature-group.chief-only .professor-signature-box { display: none; }
